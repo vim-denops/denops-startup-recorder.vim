@@ -31,14 +31,14 @@ function! denops_startup_recorder#display() abort
   for [l:plugin_name, l:ready, l:load, l:init] in l:records
     let l:plugin_name = printf('%-*s', l:longest, l:plugin_name)
     call add(l:content, printf(
-          \ '%s : %.3f ms (load: %.3f ms, init: %.3f ms)',
+          \ '%s : %.3f s (load: %.3f s, init: %.3f s)',
           \ l:plugin_name,
           \ l:ready,
           \ l:load,
           \ l:init,
           \))
   endfor
-  call add(l:content, printf('(DenopsReady: %.3f ms)', l:info['ready']))
+  call add(l:content, printf('(DenopsReady: %.3f s)', l:info['ready']))
   vertical new
   call setline(1, l:content)
   setlocal buftype=nofile nomodifiable nomodified
