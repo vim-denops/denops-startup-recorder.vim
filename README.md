@@ -36,10 +36,10 @@ gin              : 0.532 ms (load: 0.393 ms, init: 0.002 ms)
 
 The results reveal:
 
-- Duration from the initiation of Vim to the effective availability of plugins.
-- Elapsed time from when Denops registers the plugin to the complete loading of the plugin script (`load`).
-- Time passed from the full loading of the plugin script to the complete initialization of the plugin (`init`).
-- Time taken by Vim from loading Denops to rendering Denops fully operational.
+- Duration from the initiation of Vim to the effective availability of plugins.<br>`DenopsPluginPost:* - VimEnter`
+- Elapsed time from when Denops registers the plugin to the complete loading of the plugin script (`load`).<br>`DenopsPluginPre:* - DenopsPluginRegister:*`
+- Time passed from the full loading of the plugin script to the complete initialization of the plugin (`init`).<br>`DenopsPluginPost:* - DenopsPluginPre:*`
+- Time taken by Vim from loading Denops to rendering Denops fully operational.<br>`DenopsReady - VimEnter`
 
 > [!NOTE]
 > The `load` value may be `0.000 ms` on denops.vim versions that do not yet support the `DenopsPluginRegister` autocmd.

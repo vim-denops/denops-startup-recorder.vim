@@ -9,6 +9,6 @@ augroup denops_startup_recorder
   autocmd User DenopsPluginRegister:* call denops_startup_recorder#_on_event('register')
   autocmd User DenopsPluginPre:* call denops_startup_recorder#_on_event('pre')
   autocmd User DenopsPluginPost:* call denops_startup_recorder#_on_event('post')
+  autocmd VimEnter * call denops_startup_recorder#_on_load()
 augroup END
 
-call denops_startup_recorder#_on_load()

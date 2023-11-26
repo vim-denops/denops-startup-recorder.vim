@@ -29,9 +29,9 @@ function! denops_startup_recorder#display() abort
   let l:longest = max(map(copy(l:records), {_, v -> len(v[0])}))
   let l:content = []
   for [l:plugin_name, l:ready, l:load, l:init] in l:records
-    let l:plugin_name = printf('%-*s', l:longest + 1, l:plugin_name)
+    let l:plugin_name = printf('%-*s', l:longest, l:plugin_name)
     call add(l:content, printf(
-          \ '%s: %.3f ms (load: %.3f ms, init: %.3f ms)',
+          \ '%s : %.3f ms (load: %.3f ms, init: %.3f ms)',
           \ l:plugin_name,
           \ l:ready,
           \ l:load,
