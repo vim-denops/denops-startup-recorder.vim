@@ -60,5 +60,5 @@ function! denops_startup_recorder#_on_event(event_name) abort
 endfunction
 
 function! s:extract_plugin_name(bufname) abort
-  return substitute(a:bufname, 'DenopsPlugin\%(Register\|Pre\|Post\):', '', '')
+  return substitute(a:bufname, '[^:]\+:', '', '')
 endfunction
