@@ -21,20 +21,18 @@ function! denops_startup_recorder#display() abort
   let l:info = denops_startup_recorder#get()
   let l:records = []
   for [l:plugin_name, l:plugin_time] in items(l:info['plugins'])
-    let l:load = l:plugin_time['pre'] - get(l:plugin_time, 'register', l:plugin_time['pre'])
     let l:init = l:plugin_time['post'] - l:plugin_time['pre']
-    call add(l:records, [l:plugin_name, l:plugin_time['post'], l:load, l:init])
+    call add(l:records, [l:plugin_name, l:plugin_time['post'], l:init])
   endfor
   let l:records = sort(l:records, {a, b -> a[1] == b[1] ? 0 : a[1] > b[1] ? 1 : -1 })
   let l:longest = max(map(copy(l:records), {_, v -> len(v[0])}))
   let l:content = []
-  for [l:plugin_name, l:ready, l:load, l:init] in l:records
+  for [l:plugin_name, l:ready, l:init] in l:records
     let l:plugin_name = printf('%-*s', l:longest, l:plugin_name)
     call add(l:content, printf(
-          \ '%s : %.3f s (load: %.3f s, init: %.3f s)',
+          \ '%s : %.3f s (init: %.3f s)',
           \ l:plugin_name,
           \ l:ready,
-          \ l:load,
           \ l:init,
           \))
   endfor
