@@ -13,7 +13,7 @@ endfunction
 augroup denops_startup_recorder
   autocmd!
   autocmd VimEnter * call s:record('VimEnter')
-  autocmd User DenopsReady,DenopsPluginPre:*,DenopsPluginPost:*,DenopsProcessStarted 
+  autocmd User DenopsReady,DenopsPluginWorkerPre:*,DenopsPluginWorkerPost:*,DenopsPluginPre:*,DenopsPluginPost:*,DenopsProcessStarted 
         \ call s:record(expand('<amatch>'))
 augroup END
 
