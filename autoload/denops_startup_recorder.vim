@@ -33,7 +33,6 @@ function! denops_startup_recorder#display_events(...) abort
         \ denops_startup_recorder#events(),
         \ { _, v -> s:display_event(v) },
         \)
-  echo l:events
   let l:longest_name = max(map(copy(l:events), { _, v -> len(v.name) }))
   let l:longest_start = max(map(copy(l:events), { _, v -> len(v.start_display) }))
   let l:longest_end = max(map(copy(l:events), { _, v -> len(v.end_display) }))
