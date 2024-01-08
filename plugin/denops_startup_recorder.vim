@@ -3,11 +3,18 @@ if exists('g:loaded_denops_startup_recorder')
 endif
 let g:loaded_denops_startup_recorder = 1
 
+let g:denops_startup_recorder_basetime = reltime()
+let g:denops_startup_recorder_records = []
+
+function! s:record(name) abort
+  call add(g:denops_startup_recorder_records, [a:name, reltime()])
+endfunction
+
 augroup denops_startup_recorder
   autocmd!
-  autocmd User DenopsReady call denops_startup_recorder#_on_ready()
-  autocmd User DenopsSystemPluginPre:* call denops_startup_recorder#_on_event('pre')
-  autocmd User DenopsSystemPluginPost:* call denops_startup_recorder#_on_event('post')
-  autocmd VimEnter * call denops_startup_recorder#_on_load()
+  autocmd VimEnter * call s:record('VimEnter')
+  autocmd User DenopsReady,DenopsPluginPre:*,DenopsPluginPost:*,DenopsProcessStarted 
+        \ call s:record(expand('<amatch>'))
 augroup END
 
+command! DenopsStartupRecorderDisplayEvents call denops_startup_recorder#display_events()

@@ -1,62 +1,89 @@
-let s:load_reltime = v:null
-let s:ready_reltime = v:null
-let s:plugin_reltimes = {}
-
-function! denops_startup_recorder#get() abort
-  let l:plugin_times = {}
-  for [l:plugin_name, l:plugin_reltime] in items(s:plugin_reltimes)
-    let l:plugin_time = {}
-    for [l:event_name, l:event_reltime] in items(l:plugin_reltime)
-      let l:plugin_time[l:event_name] = reltimefloat(reltime(s:load_reltime, l:event_reltime))
-    endfor
-    let l:plugin_times[l:plugin_name] = l:plugin_time
+function! denops_startup_recorder#events() abort
+  const l:basetime = g:denops_startup_recorder_basetime
+  let l:records = deepcopy(g:denops_startup_recorder_records)
+  let l:events = {}
+  for [l:event_name, l:reltime] in l:records
+    let l:m = matchlist(l:event_name, '^\(.\+\):\(.\+\)$')
+    if !empty(l:m)
+      let l:event_name = l:m[1]
+      let l:plugin_name = l:m[2]
+      let l:event = get(l:events, l:plugin_name, {})
+      if l:event_name ==# 'DenopsPluginPre'
+        let l:event.start = reltime(l:basetime, l:reltime)
+      elseif l:event_name ==# 'DenopsPluginPost'
+        let l:event.end = reltime(l:basetime, l:reltime)
+      endif
+      let l:events[l:plugin_name] = l:event
+    else
+      let l:events[l:event_name] = #{
+            \ start: reltime(l:basetime, l:reltime),
+            \}
+    endif
   endfor
-  return {
-    \ 'ready': reltimefloat(reltime(s:load_reltime, s:ready_reltime)),
-    \ 'plugins': l:plugin_times,
-    \}
+  let l:events = map(items(l:events), { _, v -> [v[0], s:format_event(v[1])] })
+  let l:events = sort(l:events, { e1, e2 -> s:compare_event_infos(e1[1], e2[1]) })
+  return l:events
 endfunction
 
-function! denops_startup_recorder#display() abort
-  let l:info = denops_startup_recorder#get()
-  let l:records = []
-  for [l:plugin_name, l:plugin_time] in items(l:info['plugins'])
-    let l:init = l:plugin_time['post'] - l:plugin_time['pre']
-    call add(l:records, [l:plugin_name, l:plugin_time['post'], l:init])
+function! denops_startup_recorder#display_events() abort
+  let l:events = map(
+        \ denops_startup_recorder#events(),
+        \ { _, v -> [v[0], s:display_event(v[1])] },
+        \)
+  let l:longest_name = max(map(copy(l:events), { _, v -> len(v[0]) }))
+  let l:longest_start = max(map(copy(l:events), { _, v -> len(v[1].start_display) }))
+  let l:longest_duration = max(map(copy(l:events), { _, v -> len(get(v[1], 'duration_display', '')) }))
+  let l:format_expr = printf('%%%ds  %%%ds  %%%ds', l:longest_name, l:longest_start, l:longest_duration)
+  let l:Format = { v -> printf(l:format_expr, v[0], v[1].start_display, get(v[1], 'duration_display', '')) }
+  let l:head_length = l:longest_name + l:longest_start + l:longest_duration + 4
+  let l:tail_length = &columns - l:head_length - 3
+  let l:last_time = l:events[-1][1].end
+  let l:ratio = l:tail_length / l:last_time
+  redraw
+  echo repeat('─', &columns - 1)
+  echo printf(l:format_expr, 'Name', 'Start', 'Duration')
+  echo repeat('─', &columns - 1)
+  for l:event in l:events
+    echo l:Format(l:event) .. '  ' .. s:display_event_bar(l:event[1], l:ratio, l:tail_length) .. ''
   endfor
-  let l:records = sort(l:records, {a, b -> a[1] == b[1] ? 0 : a[1] > b[1] ? 1 : -1 })
-  let l:longest = max(map(copy(l:records), {_, v -> len(v[0])}))
-  let l:content = []
-  for [l:plugin_name, l:ready, l:init] in l:records
-    let l:plugin_name = printf('%-*s', l:longest, l:plugin_name)
-    call add(l:content, printf(
-          \ '%s : %.3f s (init: %.3f s)',
-          \ l:plugin_name,
-          \ l:ready,
-          \ l:init,
-          \))
-  endfor
-  call add(l:content, printf('(DenopsReady: %.3f s)', l:info['ready']))
-  vertical new
-  call setline(1, l:content)
-  setlocal buftype=nofile nomodifiable nomodified
+  echo repeat('─', &columns - 1)
 endfunction
 
-function! denops_startup_recorder#_on_load() abort
-  let s:load_reltime = reltime()
+function! s:compare_event_infos(i1, i2) abort
+  return a:i1.start == a:i2.start ? 0 : a:i1.start > a:i2.start ? 1 : -1
 endfunction
 
-function! denops_startup_recorder#_on_ready() abort
-  let s:ready_reltime = reltime()
+function! s:format_event(event) abort
+  let l:event = #{
+        \ start: reltimefloat(a:event.start),
+        \}
+  if has_key(a:event, 'end')
+    let l:event.end = reltimefloat(a:event.end)
+    let l:event.duration = reltimefloat(reltime(a:event.start, a:event.end))
+  endif
+  return l:event
 endfunction
 
-function! denops_startup_recorder#_on_event(event_name) abort
-  let l:plugin_name = s:extract_plugin_name(expand('<amatch>'))
-  let l:plugin_reltime = get(s:plugin_reltimes, l:plugin_name, {})
-  let l:plugin_reltime = extend(l:plugin_reltime, { a:event_name : reltime() })
-  let s:plugin_reltimes[l:plugin_name] = l:plugin_reltime
+function! s:display_event(event) abort
+  let l:event = #{
+        \ start: a:event.start,
+        \ start_display: printf('%.6f ms', a:event.start * 1000),
+        \}
+  if has_key(a:event, 'end')
+    let l:event.end = a:event.end
+    let l:event.end_display = printf('%.6f ms', a:event.end * 1000)
+  endif
+  if has_key(a:event, 'duration')
+    let l:event.duration = a:event.duration
+    let l:event.duration_display = printf('%.6f ms', a:event.duration * 1000)
+  endif
+  return l:event
 endfunction
 
-function! s:extract_plugin_name(bufname) abort
-  return substitute(a:bufname, '[^:]\+:', '', '')
+function! s:display_event_bar(event, ratio, width) abort
+  let l:bar = repeat('▓', has_key(a:event, 'duration') ? float2nr(a:event.duration * a:ratio) : 1)
+  let l:bar = l:bar ==# '' ? '▓' : l:bar
+  let l:leading = repeat('░', float2nr(a:event.start * a:ratio))
+  let l:trailing = repeat('░', a:width - strdisplaywidth(l:leading) - strdisplaywidth(l:bar))
+  return l:leading .. l:bar .. l:trailing
 endfunction
