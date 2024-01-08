@@ -17,4 +17,4 @@ augroup denops_startup_recorder
         \ call s:record(expand('<amatch>'))
 augroup END
 
-command! DenopsStartupRecorderDisplayEvents call denops_startup_recorder#display_events()
+command! -nargs=? DenopsStartupRecorderDisplayEvents call denops_startup_recorder#display_events(<f-args>)

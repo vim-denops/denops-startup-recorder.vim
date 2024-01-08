@@ -44,13 +44,13 @@ function! denops_startup_recorder#display_events(...) abort
   let l:last_time = s:max(map(copy(l:events), { _, v -> v.end }))
   let l:ratio = l:tail_length / l:last_time
   redraw
-  echo repeat('─', &columns - 1)
+  echo repeat('─', l:width - 1)
   echo printf(l:label_format, 'Name', 'Start', 'End', 'Duration')
-  echo repeat('─', &columns - 1)
+  echo repeat('─', l:width - 1)
   for l:event in l:events
     echo l:Format(l:event) .. '  ' .. s:display_event_bar(l:event, l:ratio, l:tail_length) .. ''
   endfor
-  echo repeat('─', &columns - 1)
+  echo repeat('─', l:width - 1)
 endfunction
 
 function! s:compare_events(e1, e2) abort
