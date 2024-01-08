@@ -12,6 +12,26 @@ Call `DenopsStartupRecorderDisplayEvents` to echo the result
 
 The results reveal:
 
+```
+                                                           ┌────────────── Start
+                                                           │
+                                                           │            ┌─ End
+                                                           │            │
+                                                           ├─ Duration ─┤
+                                                           │            │
+{name}  135.105791 ms  461.203625 ms  326.097834 ms  ░░░░░░▒▒▒▒▒▒▒▒▓▓▓▓▓▓░░░░░░░░░░░░
+                                                           ┊      ┊┊    ┊
+                                                           │      ││    │
+                                                           │      ││    └─ Plugin end
+                                                           │      ││
+                                                           │      │└────── Plugin start
+                                                           │      │
+                                                           │      └─────── Worker end
+                                                           │               (may not exist)
+                                                           └────────────── Worker start
+                                                                           (may not exist)
+```
+
 - Event timing from the plugin load
 - Time passed from the full loading of the plugin script to the complete initialization of the plugin (`init`).<br>`DenopsPluginPost:* - DenopsPluginPre:*`
 
