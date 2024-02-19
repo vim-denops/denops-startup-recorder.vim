@@ -22,7 +22,7 @@ function! denops_startup_recorder#events() abort
       let l:events[l:event_name] = #{ start: reltime(l:basetime, l:reltime) }
     endif
   endfor
-  let l:events = map(items(l:events), { _, v -> s:normalize_event(v[0], v[1]) })
+  let l:events = filter(map(items(l:events), { _, v -> s:normalize_event(v[0], v[1]) }), { _, v -> !empty(v) })
   let l:events = sort(l:events, { e1, e2 -> s:compare_events(e1, e2) })
   return l:events
 endfunction
@@ -63,7 +63,7 @@ function! s:normalize_event(name, event) abort
     let l:event.start = reltimefloat(a:event.start)
     let l:event.end = l:event.start
     let l:event.dur = 0
-  elseif has_key(a:event, 'plugin_start') && has_key(a:event, 'worker_start')
+  elseif has_key(a:event, 'plugin_start') && has_key(a:event, 'worker_start') && has_key(a:event, 'plugin_end')
     let l:event.plugin_start = reltimefloat(a:event.plugin_start)
     let l:event.plugin_end = reltimefloat(a:event.plugin_end)
     let l:event.plugin_dur = reltimefloat(reltime(a:event.plugin_start, a:event.plugin_end))
@@ -73,13 +73,15 @@ function! s:normalize_event(name, event) abort
     let l:event.start = l:event.worker_start
     let l:event.end = l:event.plugin_end
     let l:event.dur = reltimefloat(reltime(a:event.worker_start, a:event.plugin_end))
-  elseif has_key(a:event, 'plugin_start')
+  elseif has_key(a:event, 'plugin_start') && has_key(a:event, 'plugin_end')
     let l:event.plugin_start = reltimefloat(a:event.plugin_start)
     let l:event.plugin_end = reltimefloat(a:event.plugin_end)
     let l:event.plugin_dur = reltimefloat(reltime(a:event.plugin_start, a:event.plugin_end))
     let l:event.start = l:event.plugin_start
     let l:event.end = l:event.plugin_end
     let l:event.dur = reltimefloat(reltime(a:event.plugin_start, a:event.plugin_end))
+  elseif !has_key(a:event, 'plugin_end')
+    return {}
   else
     throw printf('Unexpected event is found: %s', string(a:event))
   endif
